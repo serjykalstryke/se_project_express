@@ -6,10 +6,7 @@ const indexRouter = require("./routes/index");
 const app = express();
 const { PORT = 3000 } = process.env;
 
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
-});
-
+app.use(express.json());
 app.use("/", indexRouter);
 
 mongoose
