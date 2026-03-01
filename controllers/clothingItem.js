@@ -18,8 +18,9 @@ const getAllClothingItems = (req, res) => {
 
 const createClothingItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
+  const owner = req.user._id;
 
-  ClothingItem.create({ name, weather, imageUrl })
+  ClothingItem.create({ name, weather, imageUrl, owner })
     .then((clothingItem) => res.status(201).send(clothingItem))
     .catch((err) => {
       console.error(err);
@@ -63,38 +64,6 @@ const getClothingItemById = (req, res) => {
     });
 };
 
-const updateClothingItemById = (req, res) => {
-  const { clothingItemId } = req.params;
-  const { name, weather, imageUrl } = req.body;
-
-  ClothingItem.findByIdAndUpdate(
-    clothingItemId,
-    { name, weather, imageUrl },
-    { new: true, runValidators: true }
-  )
-    .orFail()
-    .then((clothingItem) => res.send(clothingItem))
-    .catch((err) => {
-      console.error(err);
-
-      if (err.name === "ValidationError" || err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid data passed when updating an item." });
-      }
-
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: "No clothing item found with the requested ID." });
-      }
-
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
-};
-
 const deleteClothingItemById = (req, res) => {
   const { clothingItemId } = req.params;
 
@@ -124,7 +93,7 @@ const deleteClothingItemById = (req, res) => {
 
 const likeClothingItem = (req, res) => {
   const { clothingItemId } = req.params;
-  const userId = "507f1f77bcf86cd799439011";
+  const userId = req.user._id;
 
   ClothingItem.findByIdAndUpdate(
     clothingItemId,
@@ -156,7 +125,7 @@ const likeClothingItem = (req, res) => {
 
 const unlikeClothingItem = (req, res) => {
   const { clothingItemId } = req.params;
-  const userId = "507f1f77bcf86cd799439011";
+  const userId = req.user._id;
 
   ClothingItem.findByIdAndUpdate(
     clothingItemId,
@@ -190,7 +159,6 @@ module.exports = {
   getAllClothingItems,
   createClothingItem,
   getClothingItemById,
-  updateClothingItemById,
   deleteClothingItemById,
   likeClothingItem,
   unlikeClothingItem,
