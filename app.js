@@ -11,7 +11,7 @@ const { PORT = 3000 } = process.env;
 app.use(express.json());
 app.use("/", indexRouter);
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(NOT_FOUND).send({ message: "Resource not found" });
 });
 
