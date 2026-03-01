@@ -1,13 +1,20 @@
 const User = require("../models/user");
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  INTERNAL_SERVER_ERROR,
+} = require("../utils/errors");
 
 exports.getAllUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.status(200).send(users);
+      res.send(users);
     })
     .catch((err) => {
-      console.error("Error fetching users:", err);
-      res.status(500).send({ message: err.message });
+      console.error(err);
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -19,11 +26,17 @@ exports.createUser = (req, res) => {
       res.status(201).send(user);
     })
     .catch((err) => {
-      console.error("Error creating user:", err);
+      console.error(err);
+
       if (err.name === "ValidationError") {
-        return res.status(400).send({ message: err.message });
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid data passed when creating a user." });
       }
-      return res.status(500).send({ message: err.message });
+
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -33,8 +46,10 @@ exports.deleteAllUsers = (req, res) => {
       res.send({ message: "All users have been deleted" });
     })
     .catch((err) => {
-      console.error("Error deleting users:", err);
-      res.status(500).send({ error: "An error occurred while deleting users" });
+      console.error(err);
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -42,39 +57,60 @@ exports.getUserById = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
+    .orFail()
     .then((user) => {
-      if (!user) {
-        return res.status(404).send({ message: "User not found" });
-      }
-      return res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
+      console.error(err);
+
       if (err.name === "CastError") {
-        return res.status(400).send({ message: "Invalid user ID format" });
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid user ID passed." });
       }
-      return res.status(500).send({ message: err.message });
+
+      if (err.name === "DocumentNotFoundError") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: "No user found with the requested ID." });
+      }
+
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
 exports.updateUserById = (req, res) => {
   const { userId } = req.params;
 
-  User.findByIdAndUpdate(userId, req.body, { new: true, runValidators: true })
+  User.findByIdAndUpdate(userId, req.body, {
+    new: true,
+    runValidators: true,
+  })
+    .orFail()
     .then((user) => {
-      if (!user) {
-        return res.status(404).send({ error: "User not found" });
-      }
-      return res.send(user);
+      res.send(user);
     })
     .catch((err) => {
-      console.error("Error updating user:", err);
-      if (err.name === "CastError") {
-        return res.status(400).send({ error: "Invalid user ID format" });
+      console.error(err);
+
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid data passed when updating a user." });
       }
-      if (err.name === "ValidationError") {
-        return res.status(400).send({ error: err.message });
+
+      if (err.name === "DocumentNotFoundError") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: "No user found with the requested ID." });
       }
-      return res.status(500).send({ error: "An error occurred while updating the user" });
+
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -82,17 +118,27 @@ exports.deleteUserById = (req, res) => {
   const { userId } = req.params;
 
   User.findByIdAndDelete(userId)
+    .orFail()
     .then((user) => {
-      if (!user) {
-        return res.status(404).send({ error: "User not found" });
-      }
-      return res.send({ message: "User has been deleted" });
+      res.send(user);
     })
     .catch((err) => {
-      console.error("Error deleting user:", err);
+      console.error(err);
+
       if (err.name === "CastError") {
-        return res.status(400).send({ error: "Invalid user ID format" });
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid user ID passed." });
       }
-      return res.status(500).send({ error: "An error occurred while deleting the user" });
+
+      if (err.name === "DocumentNotFoundError") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: "No user found with the requested ID." });
+      }
+
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
