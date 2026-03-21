@@ -16,7 +16,13 @@ const createUser = (req, res) => {
     name, avatar, email, password,
   } = req.body;
 
-  bcrypt
+  if (!email || !password || typeof password !== "string") {
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "Invalid data passed when creating a user." });
+  }
+
+  return bcrypt
     .hash(password, 10)
     .then((hash) => User.create({
       name,
@@ -53,7 +59,7 @@ const createUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  User.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
@@ -63,14 +69,21 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      res
-        .status(UNAUTHORIZED)
-        .send({ message: "Incorrect email or password." });
+
+      if (err.message === "Incorrect email or password") {
+        return res
+          .status(UNAUTHORIZED)
+          .send({ message: "Incorrect email or password." });
+      }
+
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
 const getCurrentUser = (req, res) => {
-  User.findById(req.user._id)
+  return User.findById(req.user._id)
     .orFail()
     .then((user) => {
       res.send(user);
@@ -99,7 +112,7 @@ const getCurrentUser = (req, res) => {
 const updateProfile = (req, res) => {
   const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(
+  return User.findByIdAndUpdate(
     req.user._id,
     { name, avatar },
     { new: true, runValidators: true }
