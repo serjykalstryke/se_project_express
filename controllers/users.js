@@ -59,13 +59,19 @@ const createUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "Email and password are required." });
+  }
+
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
 
-      res.send({ token });
+      return res.send({ token });
     })
     .catch((err) => {
       console.error(err);
@@ -82,12 +88,10 @@ const login = (req, res) => {
     });
 };
 
-const getCurrentUser = (req, res) => {
-  return User.findById(req.user._id)
+const getCurrentUser = (req, res) =>
+  User.findById(req.user._id)
     .orFail()
-    .then((user) => {
-      res.send(user);
-    })
+    .then((user) => res.send(user))
     .catch((err) => {
       console.error(err);
 
@@ -107,7 +111,6 @@ const getCurrentUser = (req, res) => {
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server." });
     });
-};
 
 const updateProfile = (req, res) => {
   const { name, avatar } = req.body;

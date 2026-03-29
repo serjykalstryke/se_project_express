@@ -4,16 +4,12 @@ const cors = require("cors");
 
 const { NOT_FOUND } = require("./utils/errors");
 const indexRouter = require("./routes/index");
-const { login, createUser } = require("./controllers/users");
 
 const app = express();
 const { PORT = 3001 } = process.env;
 
 app.use(cors());
 app.use(express.json());
-
-app.post("/signin", login);
-app.post("/signup", createUser);
 
 app.use("/", indexRouter);
 
