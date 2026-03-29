@@ -11,7 +11,7 @@ const getAllClothingItems = (req, res) => {
     .then((clothingItems) => res.send(clothingItems))
     .catch((err) => {
       console.error(err);
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server." });
     });
@@ -38,33 +38,6 @@ const createClothingItem = (req, res) => {
     });
 };
 
-const getClothingItemById = (req, res) => {
-  const { clothingItemId } = req.params;
-
-  ClothingItem.findById(clothingItemId)
-    .orFail()
-    .then((clothingItem) => res.send(clothingItem))
-    .catch((err) => {
-      console.error(err);
-
-      if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid clothing item ID passed." });
-      }
-
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: "No clothing item found with the requested ID." });
-      }
-
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
-};
-
 const deleteClothingItemById = (req, res) => {
   const { clothingItemId } = req.params;
 
@@ -77,8 +50,8 @@ const deleteClothingItemById = (req, res) => {
           .send({ message: "You do not have permission to delete this item." });
       }
 
-      return ClothingItem.findByIdAndDelete(clothingItemId).then(
-        (deletedItem) => res.send(deletedItem)
+      return ClothingItem.findByIdAndDelete(clothingItemId).then((deletedItem) =>
+        res.send(deletedItem)
       );
     })
     .catch((err) => {
@@ -169,7 +142,6 @@ const unlikeClothingItem = (req, res) => {
 module.exports = {
   getAllClothingItems,
   createClothingItem,
-  getClothingItemById,
   deleteClothingItemById,
   likeClothingItem,
   unlikeClothingItem,
